@@ -1,0 +1,52 @@
+name: Test Hello World
+
+# Trigger the workflow on push to main branch and on pull requests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-hello-world:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Set up Rust environment
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        # Use the stable Rust toolchain
+        toolchain: stable
+    
+    # Compile the Rust program
+    - name: Compile Hello World program
+      run: rustc main.rs
+    
+    # Run the program and capture output
+    - name: Run Hello World program
+      id: run_program
+      run: |
+        OUTPUT=$(./main)
+        echo "program_output=$OUTPUT" >> $GITHUB_OUTPUT
+        echo "Program output: $OUTPUT"
+    
+    # Verify the output matches expected result
+    - name: Verify output
+      run: |
+        EXPECTED="Hello, World!"
+        ACTUAL="${{ steps.run_program.outputs.program_output }}"
+        if [ "$ACTUAL" = "$EXPECTED" ]; then
+          echo "✅ Success: Output matches expected result"
+          echo "Expected: $EXPECTED"
+          echo "Actual: $ACTUAL"
+        else
+          echo "❌ Error: Output does not match expected result"
+          echo "Expected: '$EXPECTED'"
+          echo "Actual: '$ACTUAL'"
+          exit 1
+        fi
